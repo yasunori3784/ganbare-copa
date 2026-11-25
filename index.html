@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>がんばれこぱ</title>
+
+  <!-- iPhone PWA (ホーム画面追加) 用メタタグ -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="がんばれこぱ" />
+  <meta name="theme-color" content="#FFF8F3" />
+
+  <!-- インラインSVGアイコン (iPhoneホーム画面用) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FF9A8B'/%3E%3Cstop offset='55%25' stop-color='%23FF6A88'/%3E%3Cstop offset='100%25' stop-color='%23FF99AC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ccircle cx='90' cy='82' r='44' fill='%23FFFDFB' opacity='0.95'/%3E%3Cpath d='M70 83 L84 97 L112 69' fill='none' stroke='%23FF6A88' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='90' y='154' font-family='sans-serif' font-weight='bold' font-size='22' fill='%23FFFFFF' text-anchor='middle'%3E%E3%81%93%E3%81%B1%3C/text%3E%3C/svg%3E" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts (Zen Maru Gothic: 優しく温かみのある丸ゴシック) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Zen Maru Gothic"', '"Hiragino Maru Gothic ProN"', 'sans-serif'],
+          },
+          colors: {
+            cream: '#FFF9F5',
+            peach: {
+              50: '#FFF5F2',
+              100: '#FFE8E0',
+              200: '#FFD0C2',
+              300: '#FFAD96',
+              400: '#FF8466',
+              500: '#F46049',
+              600: '#D94530',
+            },
+            mint: {
+              50: '#F2FBF7',
+              100: '#DDF5EA',
+              500: '#38B27B',
+              600: '#279161',
+            },
+            cocoa: {
+              700: '#5C4B45',
+              800: '#423430',
+              900: '#2E2320',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* 基本スタイル & iOSセーフエリア対応 */
+    html, body {
+      font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+      background-color: #FFF9F5;
+      color: #423430;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+
+    .safe-top {
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .safe-bottom {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* チェック時のポップアニメーション */
+    @keyframes popBounce {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.22); }
+      75% { transform: scale(0.94); }
+      100% { transform: scale(1); }
+    }
+    .animate-pop {
+      animation: popBounce 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* 紙吹雪パーティクルアニメーション */
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.5);
+      }
+    }
+    .confetti-piece {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      animation: confettiFall 0.9s ease-out forwards;
+    }
+
+    /* カスタムスクロールバー非表示 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col max-w-md mx-auto bg-cream shadow-xl relative select-none">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-peach-100 px-5 pb-3 safe-top">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-peach-400 to-peach-500 text-white shadow-sm text-lg">
+          🌷
+        </span>
+        <div>
+          <h1 class="text-xl font-black tracking-tight text-cocoa-800 leading-tight">がんばれこぱ</h1>
+          <p id="headerDateText" class="text-xs font-medium text-cocoa-700/75">読み込み中...</p>
+        </div>
+      </div>
+      <div id="headerBadge" class="px-3 py-1 rounded-full bg-peach-100 text-peach-600 text-xs font-bold">
+        今日もマイペースに✨
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツエリア -->
+  <main class="flex-1 px-4 pt-4 pb-28 overflow-y-auto">
+
+    <!-- ==================== 1. ホーム（今日のタスク）画面 ==================== -->
+    <section id="view-home" class="space-y-5">
+
+      <!-- 今日の進捗サマリーカード -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-cocoa-700">今日の達成度</span>
+          <span id="dailyProgressLabel" class="text-sm font-black text-peach-500">0 / 0 完了 (0%)</span>
+        </div>
+        <div class="w-full h-3 bg-peach-50 rounded-full overflow-hidden p-0.5 border border-peach-100">
+          <div id="dailyProgressBar" class="h-full bg-gradient-to-r from-peach-300 to-peach-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p id="encouragementText" class="text-xs text-cocoa-700/80 mt-2.5 font-medium text-center">
+          ひとつでもできたら花丸！無理せずいこう🌸
+        </p>
+      </div>
+
+      <!-- 毎日頑張れこぱ -->
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-lg font-black text-cocoa-800 flex items-center gap-1.5">
+            <span class="w-2 h-5 rounded-full bg-peach-400 inline-block"></span>
+            毎日頑張れこぱ
+          </h2>
+          <span class="text-[11px] font-bold text-cocoa-700/60 bg-white px-2.5 py-0.5 rounded-full border border-peach-100">
+            朝4時リセット
+          </span>
+        </div>
+        <div id="list-daily" class="space-y-2"></div>
+      </div>
+
+      <!-- 毎週頑張れこぱ -->
+      <div class="space-y-2.5 pt-1">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-lg font-black text-cocoa-800 flex items-center gap-1.5">
+            <span class="w-2 h-5 rounded-full bg-amber-400 inline-block"></span>
+            毎週頑張れこぱ
+          </h2>
+          <span id="weeklyRangeLabel" class="text-[11px] font-bold text-cocoa-700/60 bg-white px-2.5 py-0.5 rounded-full border border-peach-100">
+            月〜日
+          </span>
+        </div>
+        <div id="list-weekly" class="space-y-2"></div>
+      </div>
+
+      <!-- 毎月頑張れこぱ -->
+      <div class="space-y-2.5 pt-1">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-lg font-black text-cocoa-800 flex items-center gap-1.5">
+            <span class="w-2 h-5 rounded-full bg-mint-500 inline-block"></span>
+            毎月頑張れこぱ
+          </h2>
+          <span id="monthlyRangeLabel" class="text-[11px] font-bold text-cocoa-700/60 bg-white px-2.5 py-0.5 rounded-full border border-peach-100">
+            今月
+          </span>
+        </div>
+        <div id="list-monthly" class="space-y-2"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== 2. カレンダー（履歴）画面 ==================== -->
+    <section id="view-calendar" class="hidden space-y-4">
+
+      <!-- カレンダーカード -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100">
+        <!-- 月切り替えヘッダー -->
+        <div class="flex items-center justify-between mb-4">
+          <button onclick="changeCalendarMonth(-1)" class="w-10 h-10 rounded-2xl bg-peach-50 text-peach-600 font-bold flex items-center justify-center active:scale-95 transition">
+            ◀
+          </button>
+          <div class="text-center">
+            <h2 id="calendarMonthTitle" class="text-lg font-black text-cocoa-800">2026年 11月</h2>
+            <p id="calendarMonthStats" class="text-xs font-bold text-peach-500">今月の記録: 0日</p>
+          </div>
+          <button onclick="changeCalendarMonth(1)" class="w-10 h-10 rounded-2xl bg-peach-50 text-peach-600 font-bold flex items-center justify-center active:scale-95 transition">
+            ▶
+          </button>
+        </div>
+
+        <!-- 曜日ヘッダー (月曜始まり) -->
+        <div class="grid grid-cols-7 text-center text-xs font-bold text-cocoa-700/60 mb-2">
+          <div>月</div>
+          <div>火</div>
+          <div>水</div>
+          <div>木</div>
+          <div>金</div>
+          <div class="text-sky-500">土</div>
+          <div class="text-rose-500">日</div>
+        </div>
+
+        <!-- 日付グリッド -->
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5"></div>
+
+        <!-- 凡例 -->
+        <div class="flex items-center justify-center gap-4 mt-4 pt-3 border-t border-peach-50 text-[11px] text-cocoa-700/75 font-medium">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-peach-200 inline-block"></span> 1〜2個</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-peach-400 inline-block"></span> 半分以上</span>
+          <span class="flex items-center gap-1">💮 毎日全クリ</span>
+        </div>
+      </div>
+
+      <!-- 選択された日の詳細履歴カード -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100">
+        <div class="flex items-center justify-between mb-3">
+          <h3 id="selectedDateHeading" class="text-base font-black text-cocoa-800">選択日の記録</h3>
+          <span id="selectedDateCountBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-mint-100 text-mint-600">0件達成</span>
+        </div>
+        <div id="selectedDateLogs" class="space-y-2"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== 3. タスク編集画面 ==================== -->
+    <section id="view-tasks" class="hidden space-y-5">
+
+      <!-- 新規タスク追加フォーム -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100 space-y-3">
+        <h2 class="text-base font-black text-cocoa-800 flex items-center gap-1.5">
+          <span>➕</span> 新しいタスクを追加
+        </h2>
+
+        <div>
+          <label class="block text-xs font-bold text-cocoa-700 mb-1">カテゴリ</label>
+          <div class="grid grid-cols-3 gap-2" id="newTaskCategoryGroup">
+            <button type="button" data-cat="daily" onclick="selectNewCategory('daily')" class="cat-btn py-2 rounded-xl text-xs font-bold border-2 border-peach-400 bg-peach-50 text-peach-600 transition">
+              毎日
+            </button>
+            <button type="button" data-cat="weekly" onclick="selectNewCategory('weekly')" class="cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 bg-white text-cocoa-700 transition">
+              毎週
+            </button>
+            <button type="button" data-cat="monthly" onclick="selectNewCategory('monthly')" class="cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 bg-white text-cocoa-700 transition">
+              毎月
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-cocoa-700 mb-1">タスク名</label>
+          <input id="newTaskTitle" type="text" placeholder="例：白湯を飲む、ヨガ、美容院" class="w-full px-3.5 py-2.5 rounded-xl bg-cream border border-peach-200 text-sm font-medium focus:outline-none focus:border-peach-400" />
+        </div>
+
+        <div class="flex items-center justify-between bg-cream px-3.5 py-2.5 rounded-xl border border-peach-100">
+          <div>
+            <span class="text-xs font-bold text-cocoa-800 block">目標回数（期間あたり）</span>
+            <span class="text-[11px] text-cocoa-700/70">通常は1回。「週3回お弁当」などは3に設定</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="adjustNewTarget(-1)" class="w-8 h-8 rounded-lg bg-white border border-peach-200 font-bold text-peach-600 active:scale-95">-</button>
+            <span id="newTaskTargetDisplay" class="w-6 text-center font-black text-sm">1</span>
+            <button type="button" onclick="adjustNewTarget(1)" class="w-8 h-8 rounded-lg bg-white border border-peach-200 font-bold text-peach-600 active:scale-95">+</button>
+          </div>
+        </div>
+
+        <button type="button" onclick="handleAddTask()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-peach-400 to-peach-500 text-white font-black text-sm shadow-sm active:scale-[0.99] transition">
+          リストに追加する
+        </button>
+      </div>
+
+      <!-- 既存タスク一覧（編集・並び替え・削除） -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100 space-y-2.5">
+          <h3 class="text-sm font-black text-peach-600">毎日頑張れこぱ の項目</h3>
+          <div id="manage-daily" class="space-y-2"></div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100 space-y-2.5">
+          <h3 class="text-sm font-black text-amber-600">毎週頑張れこぱ の項目</h3>
+          <div id="manage-weekly" class="space-y-2"></div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-peach-100 space-y-2.5">
+          <h3 class="text-sm font-black text-mint-600">毎月頑張れこぱ の項目</h3>
+          <div id="manage-monthly" class="space-y-2"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== 4. 使い方・設定画面 ==================== -->
+    <section id="view-guide" class="hidden space-y-5">
+
+      <!-- 使い方の手順書 -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-peach-100 space-y-4">
+        <div class="flex items-center gap-2 border-b border-peach-100 pb-3">
+          <span class="text-2xl">📖</span>
+          <div>
+            <h2 class="text-lg font-black text-cocoa-800">がんばれこぱ 使い方の手順書</h2>
+            <p class="text-xs text-cocoa-700/75">こぱ専用の毎日応援チェックリスト</p>
+          </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="space-y-1.5">
+          <h3 class="text-sm font-black text-peach-600 flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded-md bg-peach-100 text-xs">STEP 1</span>
+            iPhoneのホーム画面に追加しよう
+          </h3>
+          <p class="text-xs leading-relaxed text-cocoa-700">
+            Safariでこのページを開いた状態で、以下の手順でホーム画面にアイコンを置くと、アプリのようにすぐ開けてデータも消えにくくなります。
+          </p>
+          <ol class="text-xs text-cocoa-800 bg-cream rounded-2xl p-3 space-y-1.5 border border-peach-100 list-decimal list-inside font-medium">
+            <li>画面下の真ん中にある<strong>共有ボタン（四角から上矢印が出ているマーク）</strong>をタップ</li>
+            <li>メニューを下にスクロールして<strong>「ホーム画面に追加」</strong>をタップ</li>
+            <li>右上の<strong>「追加」</strong>をタップすれば完了！</li>
+          </ol>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="space-y-1.5">
+          <h3 class="text-sm font-black text-peach-600 flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded-md bg-peach-100 text-xs">STEP 2</span>
+            タスクのチェックとリセットの仕組み
+          </h3>
+          <ul class="text-xs leading-relaxed text-cocoa-700 space-y-1.5 list-disc list-inside">
+            <li><strong>毎日タスク：</strong>毎朝 <strong>4:00</strong> に自動リセットされます。夜更かしして深夜1時や2時にチェックしても「今日の分」として記録されるので安心！</li>
+            <li><strong>毎週タスク：</strong>月曜日の朝4:00にリセットされます。「週の半分はお弁当」のような複数回タスクは、タップするたびに回数がカウントされます。</li>
+            <li><strong>毎月タスク：</strong>毎月1日の朝4:00にリセットされます。</li>
+          </ul>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="space-y-1.5">
+          <h3 class="text-sm font-black text-peach-600 flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded-md bg-peach-100 text-xs">STEP 3</span>
+            カレンダーで頑張りを振り返る
+          </h3>
+          <p class="text-xs leading-relaxed text-cocoa-700">
+            下のメニューから<strong>「カレンダー」</strong>を開くと、タスクを達成した日にスタンプがつきます。日付をタップすると、その日に達成したタスクと時間が一覧で見られます。
+          </p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="space-y-1.5">
+          <h3 class="text-sm font-black text-peach-600 flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded-md bg-peach-100 text-xs">STEP 4</span>
+            タスクの追加・変更・削除
+          </h3>
+          <p class="text-xs leading-relaxed text-cocoa-700">
+            下のメニューの<strong>「タスク編集」</strong>から、いつでも新しい習慣を追加したり、文言の変更・順番の入れ替え・削除ができます。過去にカレンダーへ記録された履歴は消えないので気軽に変更してOKです。
+          </p>
+        </div>
+      </div>
+
+      <!-- データバックアップ・復元（iOS対策） -->
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-peach-100 space-y-3">
+        <h3 class="text-base font-black text-cocoa-800 flex items-center gap-1.5">
+          <span>💾</span> データのバックアップと復元
+        </h3>
+        <p class="text-xs text-cocoa-700/80 leading-relaxed">
+          記録データはiPhone本体の中に保存されます。機種変更するときや、万が一に備えてバックアップデータを保存できます。
+        </p>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button onclick="exportBackupData()" class="py-2.5 px-3 rounded-2xl bg-peach-50 border border-peach-200 text-peach-600 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
+            <span>📤</span> データを保存
+          </button>
+          <label class="py-2.5 px-3 rounded-2xl bg-mint-50 border border-mint-500/30 text-mint-600 font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer">
+            <span>📥</span> データを復元
+            <input type="file" accept=".json" onchange="importBackupData(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 下部ナビゲーションバー -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-peach-100 px-2 pt-2 safe-bottom z-30">
+    <div class="grid grid-cols-4 gap-1">
+      <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-peach-500 font-black transition">
+        <span class="text-xl mb-0.5">🏠</span>
+        <span class="text-[11px]">ホーム</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-cocoa-700/60 font-bold transition">
+        <span class="text-xl mb-0.5">📅</span>
+        <span class="text-[11px]">カレンダー</span>
+      </button>
+      <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-cocoa-700/60 font-bold transition">
+        <span class="text-xl mb-0.5">✏️</span>
+        <span class="text-[11px]">タスク編集</span>
+      </button>
+      <button onclick="switchTab('guide')" id="nav-guide" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-cocoa-700/60 font-bold transition">
+        <span class="text-xl mb-0.5">📖</span>
+        <span class="text-[11px]">使い方</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- カスタムモーダル（編集・確認・通知用：alert/confirm不使用） -->
+  <div id="customModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-xs p-5">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl border border-peach-100 space-y-4">
+      <h3 id="modalTitle" class="text-base font-black text-cocoa-800">タイトル</h3>
+      <div id="modalBody" class="text-sm text-cocoa-700"></div>
+      <div id="modalFooter" class="flex justify-end gap-2 pt-1"></div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 bg-cocoa-800/95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap">
+    メッセージ
+  </div>
+
+  <script>
+    /**
+     * がんばれこぱ - 習慣＆タスク管理ロジック
+     * 特徴:
+     * - 朝4時を日付変更線とするロジック（深夜のチェックも前日扱い）
+     * - マスタデータ(tasks)と達成履歴(logs)の分離設計（タスク削除・編集後も過去のカレンダー履歴を保持）
+     * - iPhone PWA / LocalStorage永続化 + JSONエクスポート・インポート対応
+     */
+
+    const STORAGE_KEY = 'ganbare_kopa_app_v1';
+
+    // 初期タスク（添付画像の内容を忠実に再現）
+    const DEFAULT_TASKS = [
+      // 毎日頑張れこぱ
+      { id: 'd1', category: 'daily', title: 'ストレッチ', targetCount: 1 },
+      { id: 'd2', category: 'daily', title: 'キッチンリセット', targetCount: 1 },
+      { id: 'd3', category: 'daily', title: '湯船', targetCount: 1 },
+      { id: 'd4', category: 'daily', title: '睡眠7時間', targetCount: 1 },
+      { id: 'd5', category: 'daily', title: 'ビタミンDと葉酸', targetCount: 1 },
+
+      // 毎週頑張れこぱ
+      { id: 'w1', category: 'weekly', title: 'パック', targetCount: 1 },
+      { id: 'w2', category: 'weekly', title: 'ピラティス（慣れたら２週に一回）', targetCount: 1 },
+      { id: 'w3', category: 'weekly', title: '週の半分はお弁当', targetCount: 3 },
+
+      // 毎月頑張れこぱ
+      { id: 'm1', category: 'monthly', title: '家計簿チェック', targetCount: 1 }
+    ];
+
+    // アプリ全体の状態
+    let appState = {
+      tasks: [],
+      logs: [] // { id, taskId, taskTitle, category, dateKey, weekKey, monthKey, completedAt }
+    };
+
+    // UI状態
+    let currentTab = 'home';
+    let calendarViewYear = 2026;
+    let calendarViewMonth = 10; // 0-indexed (10 = 11月)
+    let selectedDateKey = '';
+    let newTaskCategory = 'daily';
+    let newTaskTarget = 1;
+
+    // 応援メッセージ集
+    const PRAISE_MESSAGES = [
+      'えらい！その調子だよ✨',
+      'こぱ、今日も最高！🌷',
+      'コツコツ積み重ねてて素敵👏',
+      'ひとつクリア！自分を褒めよう💮',
+      'いい感じ！無理せずマイペースにね🍀'
+    ];
+
+    // ==================== 日付・期間キー計算（朝4時リセット対応） ====================
+
+    /**
+     * 朝4時境界を考慮した「実効日付（Dateオブジェクト）」を返す
+     * 例: 11月26日 01:30 は 11月25日 21:30 として扱われ、11月25日の日付になる
+     */
+    function getEffectiveDate(dateObj = new Date()) {
+      const shifted = new Date(dateObj.getTime() - 4 * 60 * 60 * 1000);
+      return shifted;
+    }
+
+    function formatDateKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatMonthKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
+
+    /**
+     * 月曜始まりの週キー（その週の月曜日の YYYY-MM-DD）を返す
+     */
+    function formatWeekKey(dateObj) {
+      const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+      const day = d.getDay(); // 0(日)〜6(土)
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diffToMonday);
+      return formatDateKey(d);
+    }
+
+    function getWeekRangeText(dateObj) {
+      const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+      const day = d.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() + diffToMonday);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      return `${mon.getMonth() + 1}/${mon.getDate()}(月)〜${sun.getMonth() + 1}/${sun.getDate()}(日)`;
+    }
+
+    // ==================== データの読み込み・保存 ====================
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.tasks) && Array.isArray(parsed.logs)) {
+            appState = parsed;
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load state:', e);
+      }
+      // 初回起動時はデフォルトタスクをセット
+      appState = {
+        tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+        logs: []
+      };
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        showToast('データの保存に失敗しました');
+      }
+    }
+
+    // ==================== タスク達成・解除アクション ====================
+
+    /**
+     * 指定タスクの現在の期間内における達成回数を取得
+     */
+    function getTaskProgressCount(task, effDate) {
+      const dKey = formatDateKey(effDate);
+      const wKey = formatWeekKey(effDate);
+      const mKey = formatMonthKey(effDate);
+
+      return appState.logs.filter(log => {
+        if (log.taskId !== task.id) return false;
+        if (task.category === 'daily') return log.dateKey === dKey;
+        if (task.category === 'weekly') return log.weekKey === wKey;
+        if (task.category === 'monthly') return log.monthKey === mKey;
+        return false;
+      }).length;
+    }
+
+    /**
+     * ホーム画面でタスクカードをタップしたときの処理
+     */
+    function handleToggleTask(taskId, event) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const now = new Date();
+      const effDate = getEffectiveDate(now);
+      const dKey = formatDateKey(effDate);
+      const wKey = formatWeekKey(effDate);
+      const mKey = formatMonthKey(effDate);
+
+      const target = task.targetCount || 1;
+      const currentCount = getTaskProgressCount(task, effDate);
+
+      if (currentCount < target) {
+        // 達成ログを追加
+        const newLog = {
+          id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          taskId: task.id,
+          taskTitle: task.title,
+          category: task.category,
+          dateKey: dKey,
+          weekKey: wKey,
+          monthKey: mKey,
+          completedAt: now.toISOString()
+        };
+        appState.logs.push(newLog);
+        saveState();
+
+        // エフェクト＆褒めメッセージ
+        spawnConfetti(event);
+        const msg = PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
+        showToast(msg);
+      } else {
+        // すでに目標達成済みの場合は、現在期間内のログを取り消す（誤タップ修正用）
+        const matchingIndexes = [];
+        appState.logs.forEach((log, idx) => {
+          if (log.taskId !== task.id) return;
+          if (task.category === 'daily' && log.dateKey === dKey) matchingIndexes.push(idx);
+          if (task.category === 'weekly' && log.weekKey === wKey) matchingIndexes.push(idx);
+          if (task.category === 'monthly' && log.monthKey === mKey) matchingIndexes.push(idx);
+        });
+
+        if (matchingIndexes.length > 0) {
+          // 最後の1件（または全件リセット）を削除：複数回タスクは0に戻すことで直感的にやり直せる
+          appState.logs = appState.logs.filter((_, idx) => !matchingIndexes.includes(idx));
+          saveState();
+          showToast('チェックを取り消しました');
+        }
+      }
+
+      renderHome();
+    }
+
+    // ==================== 画面レンダリング：ホーム ====================
+
+    function renderHome() {
+      const effDate = getEffectiveDate();
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      document.getElementById('headerDateText').textContent =
+        `${effDate.getFullYear()}年${effDate.getMonth() + 1}月${effDate.getDate()}日 (${weekdays[effDate.getDay()]})`;
+
+      document.getElementById('weeklyRangeLabel').textContent = getWeekRangeText(effDate);
+      document.getElementById('monthlyRangeLabel').textContent = `${effDate.getMonth() + 1}月分`;
+
+      // カテゴリ別に描画
+      const categories = ['daily', 'weekly', 'monthly'];
+      categories.forEach(cat => {
+        const container = document.getElementById(`list-${cat}`);
+        const tasks = appState.tasks.filter(t => t.category === cat);
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white/70 rounded-2xl p-4 text-center text-xs text-cocoa-700/60 border border-dashed border-peach-200">
+              タスクがありません。「タスク編集」から追加できます
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = tasks.map(task => {
+          const target = task.targetCount || 1;
+          const count = getTaskProgressCount(task, effDate);
+          const isCompleted = count >= target;
+
+          // 複数回カウント型（target > 1）のバッジ表示
+          let counterBadge = '';
+          if (target > 1) {
+            counterBadge = `
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${
+                isCompleted ? 'bg-mint-500 text-white' : 'bg-amber-100 text-amber-700'
+              }">
+                ${count} / ${target}回
+              </span>
+            `;
+          }
+
+          return `
+            <button
+              type="button"
+              onclick="handleToggleTask('${task.id}', event)"
+              class="w-full text-left flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 active:scale-[0.98] border ${
+                isCompleted
+                  ? 'bg-mint-50/90 border-mint-500/30 shadow-2xs'
+                  : 'bg-white border-peach-100 shadow-2xs hover:border-peach-300'
+              }"
+            >
+              <div class="flex items-center gap-3 pr-2">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  isCompleted
+                    ? 'bg-mint-500 text-white animate-pop shadow-xs'
+                    : 'border-2 border-peach-300 bg-cream text-transparent'
+                }">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <span class="text-[15px] font-bold leading-snug ${
+                  isCompleted ? 'line-through text-cocoa-700/50' : 'text-cocoa-800'
+                }">
+                  ${escapeHtml(task.title)}
+                </span>
+              </div>
+              <div class="shrink-0 flex items-center gap-1.5">
+                ${counterBadge}
+                ${isCompleted && target === 1 ? '<span class="text-sm">💮</span>' : ''}
+              </div>
+            </button>
+          `;
+        }).join('');
+      });
+
+      // 今日の進捗バー更新（毎日タスク基準）
+      const dailyTasks = appState.tasks.filter(t => t.category === 'daily');
+      const dailyDoneCount = dailyTasks.filter(t => getTaskProgressCount(t, effDate) >= (t.targetCount || 1)).length;
+      const totalDaily = dailyTasks.length;
+      const percent = totalDaily > 0 ? Math.round((dailyDoneCount / totalDaily) * 100) : 0;
+
+      document.getElementById('dailyProgressLabel').textContent = `${dailyDoneCount} / ${totalDaily} 完了 (${percent}%)`;
+      document.getElementById('dailyProgressBar').style.width = `${percent}%`;
+
+      const encText = document.getElementById('encouragementText');
+      const headerBadge = document.getElementById('headerBadge');
+      if (totalDaily > 0 && dailyDoneCount === totalDaily) {
+        encText.textContent = '🎉 今日の「毎日頑張れこぱ」全クリ達成！すごすぎる！';
+        encText.className = 'text-xs text-mint-600 mt-2.5 font-black text-center';
+        headerBadge.textContent = '今日全クリ💮';
+        headerBadge.className = 'px-3 py-1 rounded-full bg-mint-100 text-mint-600 text-xs font-black';
+      } else if (dailyDoneCount > 0) {
+        encText.textContent = `いい調子！あと ${totalDaily - dailyDoneCount} 個で今日コンプリート✨`;
+        encText.className = 'text-xs text-peach-600 mt-2.5 font-bold text-center';
+        headerBadge.textContent = `${dailyDoneCount}個達成中🌷`;
+        headerBadge.className = 'px-3 py-1 rounded-full bg-peach-100 text-peach-600 text-xs font-bold';
+      } else {
+        encText.textContent = 'ひとつでもできたら花丸！無理せずいこう🌸';
+        encText.className = 'text-xs text-cocoa-700/80 mt-2.5 font-medium text-center';
+        headerBadge.textContent = 'マイペースに✨';
+        headerBadge.className = 'px-3 py-1 rounded-full bg-peach-100 text-peach-600 text-xs font-bold';
+      }
+    }
+
+    // ==================== 画面レンダリング：カレンダー ====================
+
+    function changeCalendarMonth(delta) {
+      calendarViewMonth += delta;
+      if (calendarViewMonth < 0) {
+        calendarViewMonth = 11;
+        calendarViewYear--;
+      } else if (calendarViewMonth > 11) {
+        calendarViewMonth = 0;
+        calendarViewYear++;
+      }
+      renderCalendar();
+    }
+
+    function selectCalendarDate(dateKey) {
+      selectedDateKey = dateKey;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      document.getElementById('calendarMonthTitle').textContent = `${calendarViewYear}年 ${calendarViewMonth + 1}月`;
+
+      const firstDay = new Date(calendarViewYear, calendarViewMonth, 1);
+      const lastDay = new Date(calendarViewYear, calendarViewMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+
+      // 月曜始まりオフセット (0=月, 6=日)
+      const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+
+      const todayKey = formatDateKey(getEffectiveDate());
+      if (!selectedDateKey) selectedDateKey = todayKey;
+
+      // 日付ごとのログ集計
+      const logsByDate = {};
+      appState.logs.forEach(log => {
+        if (!logsByDate[log.dateKey]) logsByDate[log.dateKey] = [];
+        logsByDate[log.dateKey].push(log);
+      });
+
+      // 今月の記録日数カウント
+      const monthPrefix = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}`;
+      const activeDaysInMonth = Object.keys(logsByDate).filter(k => k.startsWith(monthPrefix) && logsByDate[k].length > 0).length;
+      document.getElementById('calendarMonthStats').textContent = `今月の頑張った日: ${activeDaysInMonth}日`;
+
+      const dailyTaskCount = appState.tasks.filter(t => t.category === 'daily').length || 1;
+      let cellsHtml = '';
+
+      // 空白セル
+      for (let i = 0; i < startOffset; i++) {
+        cellsHtml += `<div class="aspect-square"></div>`;
+      }
+
+      // 日付セル
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dKey = `${monthPrefix}-${String(d).padStart(2, '0')}`;
+        const dayLogs = logsByDate[dKey] || [];
+        const dailyLogsCount = dayLogs.filter(l => l.category === 'daily').length;
+        const isSelected = dKey === selectedDateKey;
+        const isToday = dKey === todayKey;
+
+        // スタンプ・色分け判定
+        let indicatorHtml = `<span class="h-3.5 block"></span>`;
+        if (dayLogs.length > 0) {
+          if (dailyLogsCount >= dailyTaskCount) {
+            indicatorHtml = `<span class="text-[11px] leading-none block">💮</span>`;
+          } else if (dayLogs.length >= Math.ceil(dailyTaskCount / 2)) {
+            indicatorHtml = `<span class="w-2.5 h-2.5 rounded-full bg-peach-400 mx-auto block"></span>`;
+          } else {
+            indicatorHtml = `<span class="w-2.5 h-2.5 rounded-full bg-peach-200 mx-auto block"></span>`;
+          }
+        }
+
+        cellsHtml += `
+          <button
+            type="button"
+            onclick="selectCalendarDate('${dKey}')"
+            class="aspect-square rounded-2xl flex flex-col items-center justify-center gap-0.5 transition active:scale-95 relative ${
+              isSelected
+                ? 'bg-peach-500 text-white font-black shadow-sm'
+                : isToday
+                ? 'bg-peach-50 text-peach-600 font-black border border-peach-300'
+                : 'hover:bg-cream text-cocoa-800 font-bold'
+            }"
+          >
+            <span class="text-xs leading-none">${d}</span>
+            ${indicatorHtml}
+          </button>
+        `;
+      }
+
+      document.getElementById('calendarGrid').innerHTML = cellsHtml;
+      renderSelectedDateLogs(logsByDate[selectedDateKey] || []);
+    }
+
+    function renderSelectedDateLogs(logs) {
+      const [y, m, d] = selectedDateKey.split('-');
+      document.getElementById('selectedDateHeading').textContent = `${Number(m)}月${Number(d)}日の記録`;
+      document.getElementById('selectedDateCountBadge').textContent = `${logs.length}件達成`;
+
+      const container = document.getElementById('selectedDateLogs');
+      if (logs.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-xs text-cocoa-700/60 bg-cream rounded-2xl">
+            この日の完了記録はまだありません🌱
+          </div>
+        `;
+        return;
+      }
+
+      const catBadgeMap = {
+        daily: { label: '毎日', cls: 'bg-peach-100 text-peach-600' },
+        weekly: { label: '毎週', cls: 'bg-amber-100 text-amber-700' },
+        monthly: { label: '毎月', cls: 'bg-mint-100 text-mint-600' }
+      };
+
+      container.innerHTML = logs.map(log => {
+        const dt = new Date(log.completedAt);
+        const timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+        const badge = catBadgeMap[log.category] || catBadgeMap.daily;
+
+        return `
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-cream border border-peach-100">
+            <div class="flex items-center gap-2.5">
+              <span class="text-mint-500 font-black text-sm">✔</span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-black ${badge.cls}">${badge.label}</span>
+              <span class="text-xs font-bold text-cocoa-800">${escapeHtml(log.taskTitle)}</span>
+            </div>
+            <span class="text-[11px] font-medium text-cocoa-700/60">${timeStr}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== 画面レンダリング：タスク編集 ====================
+
+    function selectNewCategory(cat) {
+      newTaskCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'cat-btn py-2 rounded-xl text-xs font-bold border-2 border-peach-400 bg-peach-50 text-peach-600 transition';
+        } else {
+          btn.className = 'cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 bg-white text-cocoa-700 transition';
+        }
+      });
+    }
+
+    function adjustNewTarget(delta) {
+      newTaskTarget = Math.max(1, Math.min(31, newTaskTarget + delta));
+      document.getElementById('newTaskTargetDisplay').textContent = newTaskTarget;
+    }
+
+    function handleAddTask() {
+      const input = document.getElementById('newTaskTitle');
+      const title = input.value.trim();
+      if (!title) {
+        showToast('タスク名を入力してね！');
+        input.focus();
+        return;
+      }
+
+      const newTask = {
+        id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        category: newTaskCategory,
+        title: title,
+        targetCount: newTaskTarget
+      };
+
+      appState.tasks.push(newTask);
+      saveState();
+
+      input.value = '';
+      newTaskTarget = 1;
+      document.getElementById('newTaskTargetDisplay').textContent = '1';
+
+      showToast('新しいタスクを追加しました✨');
+      renderTaskManager();
+    }
+
+    function moveTask(taskId, direction) {
+      const targetTask = appState.tasks.find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const sameCatTasks = appState.tasks.filter(t => t.category === targetTask.category);
+      const idxInCat = sameCatTasks.findIndex(t => t.id === taskId);
+      const swapIdxInCat = idxInCat + direction;
+
+      if (swapIdxInCat < 0 || swapIdxInCat >= sameCatTasks.length) return;
+
+      const swapTask = sameCatTasks[swapIdxInCat];
+      const globalIdxA = appState.tasks.findIndex(t => t.id === targetTask.id);
+      const globalIdxB = appState.tasks.findIndex(t => t.id === swapTask.id);
+
+      [appState.tasks[globalIdxA], appState.tasks[globalIdxB]] = [appState.tasks[globalIdxB], appState.tasks[globalIdxA]];
+      saveState();
+      renderTaskManager();
+    }
+
+    function openEditTaskModal(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const modal = document.getElementById('customModal');
+      document.getElementById('modalTitle').textContent = 'タスクの編集';
+      document.getElementById('modalBody').innerHTML = `
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-cocoa-700 mb-1">タスク名</label>
+            <input id="editTaskTitleInput" type="text" value="${escapeHtml(task.title)}" class="w-full px-3 py-2 rounded-xl bg-cream border border-peach-200 text-sm font-bold focus:outline-none focus:border-peach-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-cocoa-700 mb-1">目標回数（1〜31回）</label>
+            <input id="editTaskTargetInput" type="number" min="1" max="31" value="${task.targetCount || 1}" class="w-full px-3 py-2 rounded-xl bg-cream border border-peach-200 text-sm font-bold focus:outline-none focus:border-peach-400" />
+          </div>
+        </div>
+      `;
+      document.getElementById('modalFooter').innerHTML = `
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-gray-100 text-cocoa-700 text-xs font-bold">キャンセル</button>
+        <button onclick="saveEditedTask('${task.id}')" class="px-4 py-2 rounded-xl bg-peach-500 text-white text-xs font-bold">保存する</button>
+      `;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function saveEditedTask(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const newTitle = document.getElementById('editTaskTitleInput').value.trim();
+      const newTarget = Math.max(1, Math.min(31, parseInt(document.getElementById('editTaskTargetInput').value, 10) || 1));
+
+      if (!newTitle) {
+        showToast('タスク名を入力してください');
+        return;
+      }
+
+      task.title = newTitle;
+      task.targetCount = newTarget;
+      saveState();
+      closeModal();
+      renderTaskManager();
+      showToast('タスクを更新しました');
+    }
+
+    function openDeleteTaskModal(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const modal = document.getElementById('customModal');
+      document.getElementById('modalTitle').textContent = 'タスクの削除';
+      document.getElementById('modalBody').innerHTML = `
+        <p class="text-xs leading-relaxed">
+          「<strong>${escapeHtml(task.title)}</strong>」をリストから削除しますか？<br>
+          <span class="text-cocoa-700/70">※これまでカレンダーに記録された達成履歴はそのまま残ります。</span>
+        </p>
+      `;
+      document.getElementById('modalFooter').innerHTML = `
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-gray-100 text-cocoa-700 text-xs font-bold">やめる</button>
+        <button onclick="confirmDeleteTask('${task.id}')" class="px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-bold">削除する</button>
+      `;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function confirmDeleteTask(taskId) {
+      appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+      saveState();
+      closeModal();
+      renderTaskManager();
+      showToast('タスクを削除しました');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('customModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderTaskManager() {
+      const categories = ['daily', 'weekly', 'monthly'];
+      categories.forEach(cat => {
+        const container = document.getElementById(`manage-${cat}`);
+        const tasks = appState.tasks.filter(t => t.category === cat);
+
+        if (tasks.length === 0) {
+          container.innerHTML = `<p class="text-xs text-cocoa-700/50 py-2 text-center">項目がありません</p>`;
+          return;
+        }
+
+        container.innerHTML = tasks.map((task, idx) => `
+          <div class="flex items-center justify-between p-2.5 rounded-2xl bg-cream border border-peach-100 gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-bold text-cocoa-800 truncate">${escapeHtml(task.title)}</p>
+              ${(task.targetCount || 1) > 1 ? `<span class="text-[10px] font-bold text-amber-600">目標: ${task.targetCount}回</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="moveTask('${task.id}', -1)" ${idx === 0 ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-white border border-peach-100 text-xs font-bold disabled:opacity-30">↑</button>
+              <button onclick="moveTask('${task.id}', 1)" ${idx === tasks.length - 1 ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-white border border-peach-100 text-xs font-bold disabled:opacity-30">↓</button>
+              <button onclick="openEditTaskModal('${task.id}')" class="px-2.5 h-7 rounded-lg bg-white border border-peach-200 text-peach-600 text-[11px] font-bold">編集</button>
+              <button onclick="openDeleteTaskModal('${task.id}')" class="px-2.5 h-7 rounded-lg bg-rose-50 border border-rose-200 text-rose-500 text-[11px] font-bold">削除</button>
+            </div>
+          </div>
+        `).join('');
+      });
+    }
+
+    // ==================== バックアップ＆復元 ====================
+
+    function exportBackupData() {
+      try {
+        const dataStr = JSON.stringify(appState, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateTag = formatDateKey(getEffectiveDate());
+        a.href = url;
+        a.download = `ganbare_kopa_backup_${dateTag}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('バックアップファイルを保存しました📦');
+      } catch (e) {
+        showToast('保存に失敗しました');
+      }
+    }
+
+    function importBackupData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed.tasks) && Array.isArray(parsed.logs)) {
+            appState = parsed;
+            saveState();
+            renderHome();
+            showToast('データを復元しました✨');
+          } else {
+            showToast('ファイル形式が正しくありません');
+          }
+        } catch (err) {
+          showToast('ファイルの読み込みに失敗しました');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    // ==================== ナビゲーション・演出ユーティリティ ====================
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      const views = ['home', 'calendar', 'tasks', 'guide'];
+
+      views.forEach(v => {
+        const section = document.getElementById(`view-${v}`);
+        const navBtn = document.getElementById(`nav-${v}`);
+        if (v === tabName) {
+          section.classList.remove('hidden');
+          navBtn.className = 'nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-peach-500 bg-peach-50/80 font-black transition';
+        } else {
+          section.classList.add('hidden');
+          navBtn.className = 'nav-btn flex flex-col items-center justify-center py-1.5 rounded-2xl text-cocoa-700/60 font-bold transition';
+        }
+      });
+
+      if (tabName === 'home') renderHome();
+      if (tabName === 'calendar') {
+        const eff = getEffectiveDate();
+        calendarViewYear = eff.getFullYear();
+        calendarViewMonth = eff.getMonth();
+        selectedDateKey = formatDateKey(eff);
+        renderCalendar();
+      }
+      if (tabName === 'tasks') renderTaskManager();
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    function spawnConfetti(event) {
+      const originX = event && event.clientX ? event.clientX : window.innerWidth / 2;
+      const originY = event && event.clientY ? event.clientY : window.innerHeight / 2;
+      const colors = ['#FF8466', '#FFD166', '#38B27B', '#FF99AC', '#70D6FF'];
+
+      for (let i = 0; i < 14; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece rounded-full';
+        const size = 6 + Math.random() * 6;
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.style.backgroundColor = colors[i % colors.length];
+        el.style.left = `${originX}px`;
+        el.style.top = `${originY}px`;
+
+        const angle = (Math.PI * 2 * i) / 14 + (Math.random() - 0.5) * 0.4;
+        const dist = 45 + Math.random() * 55;
+        el.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        el.style.setProperty('--ty', `${Math.sin(angle) * dist - 20}px`);
+        el.style.setProperty('--rot', `${Math.random() * 360}deg`);
+
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 950);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 初期化実行
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      const eff = getEffectiveDate();
+      calendarViewYear = eff.getFullYear();
+      calendarViewMonth = eff.getMonth();
+      selectedDateKey = formatDateKey(eff);
+      switchTab('home');
+    });
+  </script>
+</body>
+</html>
